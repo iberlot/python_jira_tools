@@ -1,0 +1,37 @@
+name: Pylint
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Install requirements
+        run: |
+          pip install -r requirements.txt
+      - name: Analysing the code with pylint
+        id: pylint
+        run: |
+          pylint --disable=W0718 $(git ls-files '*.py') > pylint_report.txt || true
+      - name: Check pylint score
+        run: |
+          score=$(grep "Your code has been rated at" pylint_report.txt | grep -oE '[0-9]+\.[0-9]+')
+          echo "Pylint score: $score"
+          if (( $(echo "$score > 9.90" | bc -l) )); then
+            echo "Pylint score is greater than 9.90. Passing the action."
+          else
+            echo "Pylint score is less than or equal to 9.90. Failing the action."
+            cat pylint_report.txt  # Mostrar el contenido del informe pylint en la salida
+            exit 1
+          fi

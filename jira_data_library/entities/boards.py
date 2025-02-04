@@ -1,4 +1,21 @@
+""" This module contains classes for interacting with Jira boards. """
+
 class JiraBoards:
+    """
+    A class to interact with Jira boards, allowing retrieval and customization of board data.
+
+    Attributes:
+        api: An API client instance for making requests to the Jira API.
+
+    Methods:
+        _customize_board(board):
+            Extracts and returns a dictionary with selected fields from a board.
+        get_project_boards(project_key):
+            Retrieves all boards associated with a project.
+        get_board(board_id):
+            Retrieves information for a specific board.
+    """
+
     def __init__(self, api):
         self.api = api
 

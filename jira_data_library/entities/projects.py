@@ -1,3 +1,5 @@
+""" A module for interacting with Jira projects using a provided API. """
+
 class JiraProjects:
     """
     A class to interact with Jira projects using a provided API.

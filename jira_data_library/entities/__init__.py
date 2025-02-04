@@ -1,3 +1,4 @@
+""" This module is used to import all the entities in the library. """
 from .tasks import JiraTasks
 from .sprints import JiraSprints
 from .projects import JiraProjects

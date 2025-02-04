@@ -98,7 +98,8 @@ class ADFConverter:
             case "heading":
                 level = node.get("attrs", {}).get("level", 1)
                 heading = "#" * level
-                return f"{heading} {''.join(ADFConverter._convert(child, warnings) for child in content)}"
+                return f"{heading} {''.join(ADFConverter._convert(child, warnings) for
+                                            child in content)}"
 
             case "hardBreak":
                 return "\n"
@@ -108,7 +109,8 @@ class ADFConverter:
                 return f"[{url}]({url})"
 
             case "blockquote":
-                blockquote = "\n> ".join(ADFConverter._convert(child, warnings) for child in content)
+                blockquote = "\n> ".join(ADFConverter._convert(child, warnings) for
+                                         child in content)
                 return f"> {blockquote}"
 
             case "bulletList":
@@ -125,7 +127,8 @@ class ADFConverter:
             case "listItem":
                 is_ordered = isinstance(order, int)
                 symbol = f"{order}." if is_ordered else "*"
-                return f"  {symbol} {''.join(ADFConverter._convert(child, warnings).rstrip() for child in content)}"
+                return f"  {symbol} {''.join(ADFConverter._convert(child, warnings).rstrip()
+                                             for child in content)}"
 
             case "codeBlock":
                 language = node.get("attrs", {}).get("language", "")

@@ -1,7 +1,12 @@
+""" Módulo para interactuar con la API de Jira. """
 import requests
 
 class JiraAPI:
-
+    """
+    Clase para interactuar con la API de Jira, permitiendo realizar solicitudes
+    GET y POST, así como inicializar campos personalizados para puntos de historia
+    y sprints. Utiliza autenticación básica HTTP y maneja errores de solicitud.
+    """
     HEADERS = {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -17,31 +22,62 @@ class JiraAPI:
         self._initialize_custom_fields()
 
     def get(self, endpoint, params=None, use_sprint_base=False):
-        print("CASAS")
+        """
+        Sends a GET request to the specified Jira API endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the request to.
+            params (dict, optional): Query parameters to include in the request.
+            use_sprint_base (bool, optional): Whether to use the sprint base URL.
+
+        Returns:
+            dict: The JSON response from the API.
+
+        Raises:
+            ValueError: If the request results in an HTTP error.
+        """
         url = f"{self.base_url_sprint if use_sprint_base else self.base_url}/{endpoint}"
         response = requests.get(url,
                                 auth=self.auth,
                                 params=params,
                                 headers=self.HEADERS,
                                 timeout=10)
-        print(response)
         try:
-            print(response.raise_for_status())
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             raise ValueError(f"Error en la solicitud a {url}: {e.response.text}") from e
         return response.json()
 
     def post(self, endpoint, data=None):
+        """
+        Sends a POST request to the specified Jira API endpoint.
+
+        Args:
+            endpoint (str): The API endpoint to send the request to.
+            data (dict, optional): The JSON payload to include in the request body.
+
+        Returns:
+            dict: The JSON response from the API.
+
+        Raises:
+            requests.exceptions.HTTPError: If the request results in an HTTP error.
+        """
         url = f"{self.base_url}/{endpoint}"
-        response = requests.post(url, auth=self.auth, json=data)
+        response = requests.post(url, auth=self.auth, json=data, timeout=10)
         response.raise_for_status()
         return response.json()
 
     def _initialize_custom_fields(self):
         """
-        Obtiene los campos configurados en Jira y asigna los IDs de los campos
-        personalizados para story_points y sprints.
+        Initializes custom fields for story points and sprints by querying the Jira API.
+
+        Retrieves all fields from the Jira API and searches for fields related to
+        "story points" and "sprint". Sets the corresponding field IDs to
+        `self.story_points_field` and `self.sprint_field`. Raises a ValueError if
+        either field is not found.
+
+        Returns:
+            dict: A dictionary containing the IDs of the story points and sprint fields.
         """
         response = self.get("field")
         if not isinstance(response, list):

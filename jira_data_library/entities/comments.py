@@ -1,8 +1,26 @@
+""" This module provides the JiraComments class for interacting with comments on Jira tasks. """
+
 from ..utils.adf_converter import ADFConverter
 
 class JiraComments:
     """
-    Clase para gestionar los comentarios de una tarea en Jira.
+    The JiraComments class provides methods to interact with comments on Jira tasks.
+
+    It allows for retrieving, customizing, adding, updating, and deleting comments
+    associated with Jira issues. The class utilizes an instance of JiraAPI to perform
+    API requests and uses ADFConverter to process comment bodies.
+
+    Attributes:
+        api (JiraAPI): An instance of JiraAPI for making requests to the Jira API.
+
+    Methods:
+        _customize_comment(task_key, comments): Customizes comments by extracting
+            selected fields and transforming the content using ADFConverter.
+        get_comments(issue_id): Retrieves comments for a given Jira issue.
+        add_comment(issue_id, comment_body): Adds a comment to a specified Jira issue.
+        update_comment(issue_id, comment_id, new_body): Updates an existing comment
+            on a Jira issue.
+        delete_comment(issue_id, comment_id): Deletes a comment from a Jira issue.
     """
 
     def __init__(self, api):

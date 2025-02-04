@@ -1,8 +1,10 @@
+""" Tests for the JiraAPI class. """
 import responses
 from jira_data_library.api import JiraAPI
 
 @responses.activate
 def test_get_issue_details():
+    """ Test that the API client can fetch issue details. """
     api = JiraAPI("https://example.atlassian.net/rest/api/3", "user", "token")
     responses.add(
         responses.GET,

@@ -1,12 +1,53 @@
+""" A module for interacting with Jira tasks. """
+
 import re
 import os
 
 from ..utils.adf_converter import ADFConverter
 
 class JiraTasks:
+    """
+    A class for interacting with Jira tasks, providing methods to retrieve,
+    customize, and create tasks, as well as manage attachments.
+
+    Attributes:
+        api: An API client instance for interacting with Jira.
+
+    Methods:
+        _customize_task(task): Processes and customizes a Jira task by extracting
+            and organizing relevant fields and data.
+        _extract_sprint_id(fields): Extracts the sprint ID from custom fields.
+        get_task(task_key): Retrieves and customizes a Jira task using its key.
+        get_project_issues(project_key, issue_type=None, assignee=None): Retrieves
+            all issues from a project with optional filtering by issue type and assignee.
+        get_sprint_issues(sprint_id, issue_type=None, assignee=None): Retrieves all
+            issues from a sprint with optional filtering by issue type and assignee.
+        create_task(project_key, summary, description, issue_type): Creates a new
+            Jira task with specified project key, summary, description, and issue type.
+        _download_attachment(attachment_url, filename): Downloads an attachment from
+            Jira and saves it locally.
+        get_attachments(task_key): Retrieves attachments of a task, downloads them,
+            and returns a list with the data.
+    """
     def __init__(self, api):
         self.api = api
+
     def _customize_task(self, task):
+        """
+        Processes and customizes a Jira task by extracting and organizing
+        relevant fields and data.
+
+        This method recursively processes subtasks, extracts sprint and
+        attachment information, and converts the description using the
+        ADFConverter. It returns a dictionary with the customized task
+        details.
+
+        Args:
+            task (dict): The Jira task data to be customized.
+
+        Returns:
+            dict: A dictionary containing the customized task details.
+        """
         fields = task.get("fields", {})
         subtasks = fields.get("subtasks", [])
 
@@ -34,7 +75,12 @@ class JiraTasks:
             "issuetype_subtask": fields.get("issuetype", {}).get("subtask", False),
             "parent_id": fields.get("parent", {}).get("id"),
             "parent_key": fields.get("parent", {}).get("key"),
-            "parent_is_epic": fields.get("parent", {}).get("fields", {}).get("issuetype", {}).get("name") == "Epic",
+            "parent_is_epic": (
+                fields.get("parent", {})
+                .get("fields", {})
+                .get("issuetype", {})
+                .get("name") == "Epic"
+            ),
             "project_id": fields.get("project", {}).get("id"),
             "project_key": fields.get("project", {}).get("key"),
             "sprint_id": last_sprint.get("id") if last_sprint else None,
@@ -48,7 +94,11 @@ class JiraTasks:
             "status_id": fields.get("status", {}).get("id"),
             "status_color": fields.get("status", {}).get("statusCategory", {}).get("colorName"),
             "summary": fields.get("summary"),
-            "description": ADFConverter.convert(fields.get("description")) if fields.get("description") else None,
+            "description": (
+                ADFConverter.convert(fields.get("description"))
+                if fields.get("description")
+                else None
+            ),
             "story_points": fields.get(self.api.story_points_field),
             "subtasks": processed_subtasks,
             "attachments": attachments,
@@ -80,13 +130,22 @@ class JiraTasks:
         return None
 
     def get_task(self, task_key):
-        """Obtiene los detalles de una tarea específica."""
+        """
+        Retrieves and customizes a Jira task using its key.
+
+        Args:
+            task_key (str): The key of the Jira task to retrieve.
+
+        Returns:
+            dict: A dictionary containing the customized task details.
+        """
         return self._customize_task(self.api.get(f"issue/{task_key}"))
 
 
     def get_project_issues(self, project_key, issue_type=None, assignee=None):
         """
-        Obtiene todas las issues de un proyecto, con opciones de filtrado por tipo de issue y usuario asignado.
+        Obtiene todas las issues de un proyecto, con opciones de filtrado por tipo
+        de issue y usuario asignado.
 
         Args:
             project_key (str): Clave del proyecto.
@@ -109,7 +168,8 @@ class JiraTasks:
 
     def get_sprint_issues(self, sprint_id, issue_type=None, assignee=None):
         """
-        Obtiene todas las issues de un sprint, con opciones de filtrado por tipo de issue y usuario asignado.
+        Obtiene todas las issues de un sprint, con opciones de filtrado por tipo
+        de issue y usuario asignado.
 
         Args:
             sprint_id (int): ID del sprint.
@@ -132,7 +192,19 @@ class JiraTasks:
 
 
     def create_task(self, project_key, summary, description, issue_type):
-        """Crea una nueva tarea en un proyecto."""
+        """
+        Creates a new Jira task with the specified project key, summary,
+        description, and issue type.
+
+        Args:
+            project_key (str): The key of the project where the task will be created.
+            summary (str): A brief summary of the task.
+            description (str): A detailed description of the task.
+            issue_type (str): The type of issue to create (e.g., "Bug", "Task").
+
+        Returns:
+            dict: The response from the Jira API after creating the task.
+        """
         data = {
             "fields": {
                 "project": {"key": project_key},
@@ -142,6 +214,7 @@ class JiraTasks:
             }
         }
         return self.api.post("issue", data=data)
+
     def _download_attachment(self, attachment_url, filename):
         """
         Descarga el archivo adjunto desde Jira y lo guarda localmente.
@@ -161,9 +234,8 @@ class JiraTasks:
             with open(file_path, 'wb') as file:
                 file.write(response.content)
             return file_path
-        else:
-            print(f"Error al descargar el archivo: {response.status_code}")
-            return None
+        print(f"Error al descargar el archivo: {response.status_code}")
+        return None
 
     def get_attachments(self, task_key):
         """
